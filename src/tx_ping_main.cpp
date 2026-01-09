@@ -23,9 +23,41 @@ static const uint8_t PIN_AUX = 19;
 // M0 и M1 зафиксированы на GND (NORMAL MODE) - не управляются программно
 static const uint8_t PIN_LED = 2;  // Built-in LED on ESP32
 
+// ===== Timing constants (ms) =====
+static const uint32_t MODULE_INIT_TIMEOUT    = 5000;   // Timeout for module ready (AUX HIGH)
+static const uint32_t MODULE_READY_POLL      = 100;    // Poll interval for AUX ready
+static const uint32_t SERIAL_INIT_DELAY      = 500;    // Delay after Serial.begin()
+static const uint32_t UART_INIT_DELAY        = 100;    // Delay after UART begin
+static const uint32_t MODULE_STARTUP_DELAY   = 500;    // Delay after e32.begin()
+static const uint32_t PING_INTERVAL          = 1000;   // Interval between PING messages (ms)
+static const size_t MAX_SERIAL_INPUT_LENGTH  = 200;    // Max length for Serial input buffer
+
+// ===== Buffer and protocol constants =====
+static const uint32_t SERIAL_BAUD_RATE      = 115200; // USB Serial baud
+static const uint32_t LORA_BAUD_RATE        = 9600;   // LoRa module UART baud
+
 // HardwareSerial UART2 for LoRa module communication
 HardwareSerial loraSerial(2);
 LoRa_E32 e32(&loraSerial, PIN_AUX);
+
+// ===== EUID Generation =====
+// Генерация уникального ID пакета на основе счетчика и микросекунд
+static uint32_t packetCounter = 0;
+
+String generateEUID() {
+  // Формат: COUNTER_MICROS (например: 123_4567890)
+  uint32_t us = micros();
+  return String(packetCounter++) + "_" + String(us);
+}
+
+// Формирование пакета с EUID и данными
+// Формат: EUID:<id>,MSG:<message>,TIME:<ms>
+String buildPacket(const String& message) {
+  String euid = generateEUID();
+  uint32_t timestamp = millis();
+  
+  return "EUID:" + euid + ",MSG:" + message + ",TIME:" + String(timestamp);
+}
 
 static void printStatus(const char* tag, ResponseStatus& st) {
   Serial.print(tag);
@@ -39,8 +71,8 @@ static bool checkModule() {
   // Ждем готовности модуля (AUX HIGH)
   Serial.println("Waiting for module ready (AUX HIGH)...");
   uint32_t startMs = millis();
-  while (digitalRead(PIN_AUX) == LOW && millis() - startMs < 5000) {
-    delay(100);
+  while (digitalRead(PIN_AUX) == LOW && millis() - startMs < MODULE_INIT_TIMEOUT) {
+    delay(MODULE_READY_POLL);
     Serial.print(".");
   }
   Serial.println();
@@ -77,17 +109,17 @@ void setup() {
 
   pinMode(PIN_AUX, INPUT);  // Внешние pull-up резисторы 4.7k на схеме
 
-  Serial.begin(115200);
-  delay(500);
+  Serial.begin(SERIAL_BAUD_RATE);
+  delay(SERIAL_INIT_DELAY);
 
   // HardwareSerial UART2 to LoRa module (RX=16, TX=17)
-  loraSerial.begin(9600, SERIAL_8N1, PIN_RX, PIN_TX);
-  delay(100);
+  loraSerial.begin(LORA_BAUD_RATE, SERIAL_8N1, PIN_RX, PIN_TX);
+  delay(UART_INIT_DELAY);
 
   Serial.println("Starting E32 module...");
   Serial.println("M0=GND, M1=GND => NORMAL MODE (fixed)");
   e32.begin();
-  delay(500);  // Give module time to initialize
+  delay(MODULE_STARTUP_DELAY);  // Give module time to initialize
 
   Serial.println();
   Serial.println("Role: TX (sender)");
@@ -103,13 +135,13 @@ void setup() {
 void loop() {
   // 1) Отправка по таймеру (ping)
   static uint32_t lastSendMs = 0;
-  static uint32_t counter = 0;
 
   const uint32_t now = millis();
-  if (now - lastSendMs >= 1000) {
+  if (now - lastSendMs >= PING_INTERVAL) {
     lastSendMs = now;
-    String msg = String("PING #") + counter++ + " t=" + now;
-    sendLine(msg);
+    // Создаем пакет с EUID
+    String packet = buildPacket("PING");
+    sendLine(packet);
   }
 
   // 2) Отправка того, что введёте в Serial Monitor
@@ -118,11 +150,13 @@ void loop() {
     char ch = (char)Serial.read();
     if (ch == '\r' || ch == '\n') {
       if (buf.length() > 0) {
-        sendLine(buf);
+        // Оборачиваем пользовательское сообщение в пакет с EUID
+        String packet = buildPacket(buf);
+        sendLine(packet);
         buf = "";
       }
     } else {
-      if (buf.length() < 200) buf += ch;
+      if (buf.length() < MAX_SERIAL_INPUT_LENGTH) buf += ch;
     }
   }
 }
