@@ -2,10 +2,18 @@
 
 LoRaModule loraModule;
 
+// Инициализация для разных платформ
+#ifdef PLATFORM_ESP32
 LoRaModule::LoRaModule() 
-  : loraSerial(2), 
+  : loraSerial(2),  // ESP32: UART2
     e32(&loraSerial, Config::Pins::E32_AUX) {
 }
+#elif defined(PLATFORM_MEGA2560)
+LoRaModule::LoRaModule() 
+  : loraSerial(Serial1),  // Mega: UART1
+    e32(&Serial1, Config::Pins::E32_AUX) {
+}
+#endif
 
 bool LoRaModule::initialize() {
   // Настройка пинов
@@ -24,8 +32,12 @@ bool LoRaModule::initialize() {
   Serial.println(digitalRead(Config::Pins::E32_AUX) ? "HIGH" : "LOW");
   
   // LoRa UART
-  loraSerial.begin(Config::Protocol::LORA_BAUD_RATE, SERIAL_8N1, 
-                   Config::Pins::UART_RX, Config::Pins::UART_TX);
+  #ifdef PLATFORM_ESP32
+    loraSerial.begin(Config::Protocol::LORA_BAUD_RATE, SERIAL_8N1, 
+                     Config::Pins::UART_RX, Config::Pins::UART_TX);
+  #elif defined(PLATFORM_MEGA2560)
+    Serial1.begin(Config::Protocol::LORA_BAUD_RATE);
+  #endif
   delay(Config::Timing::UART_INIT_DELAY);
   
   Serial.println("Starting E32 module...");
