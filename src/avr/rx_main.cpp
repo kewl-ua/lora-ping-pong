@@ -70,7 +70,12 @@ void loop() {
           // Сохраняем в TDOA navigator для будущих расчетов
           tdoaNavigator.processRxPacket(packet, stats);
           
-          // Выводим информацию
+          // Мигание LED при приеме
+          digitalWrite(Config::Pins::LED, HIGH);
+          delay(10);
+          digitalWrite(Config::Pins::LED, LOW);
+          
+          // Выводим информацию с точными временами
           Serial.print("[");
           Serial.print(rxTime_us);
           Serial.print("us] EUID:");
@@ -79,18 +84,15 @@ void loop() {
           Serial.print(packet.sequence);
           Serial.print(" | MSG:");
           Serial.print(packet.message);
-          Serial.print(" | LAT:");
+          Serial.print(" | TX:");
+          Serial.print(packet.txTime_us);
+          Serial.print("us | LAT:");
           Serial.print(stats.latency_us);
           Serial.print("us | RSSI:");
           Serial.print(stats.rssi);
           Serial.print("dBm | SNR:");
           Serial.print(stats.snr);
           Serial.println("dB");
-          
-          // Мигание LED при приеме
-          digitalWrite(Config::Pins::LED, HIGH);
-          delay(10);
-          digitalWrite(Config::Pins::LED, LOW);
         } else {
           // Неизвестный формат
           Serial.print("[");

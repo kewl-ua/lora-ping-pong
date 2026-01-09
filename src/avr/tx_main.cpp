@@ -45,18 +45,35 @@ void loop() {
   if (now - lastSendMs >= Config::Timing::PING_INTERVAL) {
     lastSendMs = now;
     
+    // Проверка готовности модуля перед отправкой
+    if (digitalRead(Config::Pins::E32_AUX) == LOW) {
+      Serial.println("WARNING: Module not ready (AUX=LOW), skipping send");
+      return;
+    }
+    
     // Формируем пакет с EUID и временной меткой
     String packet = buildPacket("BEACON", sequenceNumber++);
+    uint32_t txTime = micros();
     bool success = loraModule.sendMessage(packet);
+    uint32_t txDuration = micros() - txTime;
     
-    Serial.print("TX> ");
+    Serial.print("TX> [");
+    Serial.print(txTime);
+    Serial.print("us] ");
     Serial.print(packet);
-    Serial.println(success ? " [OK]" : " [FAIL]");
     
-    // Мигание LED при отправке
-    digitalWrite(Config::Pins::LED, HIGH);
-    delay(20);
-    digitalWrite(Config::Pins::LED, LOW);
+    if (success) {
+      Serial.print(" [OK] (");
+      Serial.print(txDuration);
+      Serial.println("us)");
+      
+      // Мигание LED при успешной отправке
+      digitalWrite(Config::Pins::LED, HIGH);
+      delay(50);
+      digitalWrite(Config::Pins::LED, LOW);
+    } else {
+      Serial.println(" [FAIL - Module error!]");
+    }
   }
   
   // 2) Отправка пользовательских сообщений из Serial Monitor
@@ -66,17 +83,35 @@ void loop() {
     
     if (ch == '\r' || ch == '\n') {
       if (inputBuffer.length() > 0) {
+        // Проверка готовности модуля перед отправкой
+        if (digitalRead(Config::Pins::E32_AUX) == LOW) {
+          Serial.println("WARNING: Module not ready (AUX=LOW), skipping send");
+          inputBuffer = "";
+          continue;
+        }
+        
         String packet = buildPacket(inputBuffer, sequenceNumber++);
+        uint32_t txTime = micros();
         bool success = loraModule.sendMessage(packet);
+        uint32_t txDuration = micros() - txTime;
         
-        Serial.print("TX> ");
+        Serial.print("TX> [");
+        Serial.print(txTime);
+        Serial.print("us] ");
         Serial.print(packet);
-        Serial.println(success ? " [OK]" : " [FAIL]");
         
-        // Мигание LED при отправке
-        digitalWrite(Config::Pins::LED, HIGH);
-        delay(20);
-        digitalWrite(Config::Pins::LED, LOW);
+        if (success) {
+          Serial.print(" [OK] (");
+          Serial.print(txDuration);
+          Serial.println("us)");
+          
+          // Мигание LED при успешной отправке
+          digitalWrite(Config::Pins::LED, HIGH);
+          delay(50);
+          digitalWrite(Config::Pins::LED, LOW);
+        } else {
+          Serial.println(" [FAIL - Module error!]");
+        }
         
         inputBuffer = "";
       }

@@ -46,13 +46,35 @@ void loop() {
   if (now - lastSendMs >= Config::Timing::PING_INTERVAL) {
     lastSendMs = now;
     
+    // Проверка готовности модуля перед отправкой
+    if (digitalRead(Config::Pins::E32_AUX) == LOW) {
+      Serial.println("WARNING: Module not ready (AUX=LOW), skipping send");
+      return;
+    }
+    
     // Формируем пакет с EUID и временной меткой
     String packet = buildPacket("BEACON", sequenceNumber++);
+    uint32_t txTime = micros();
     bool success = loraModule.sendMessage(packet);
+    uint32_t txDuration = micros() - txTime;
     
-    Serial.print("TX> ");
+    Serial.print("TX> [");
+    Serial.print(txTime);
+    Serial.print("µs] ");
     Serial.print(packet);
-    Serial.println(success ? " [OK]" : " [FAIL]");
+    
+    if (success) {
+      Serial.print(" [OK] (");
+      Serial.print(txDuration);
+      Serial.println("µs)");
+      
+      // Мигание LED при успешной отправке
+      digitalWrite(Config::Pins::LED, HIGH);
+      delay(50);
+      digitalWrite(Config::Pins::LED, LOW);
+    } else {
+      Serial.println(" [FAIL - Module error!]");
+    }
     
     // Обновление дисплея
     displayManager.showTxStatus(sequenceNumber - 1, "BEACON", success);
@@ -65,12 +87,35 @@ void loop() {
     
     if (ch == '\r' || ch == '\n') {
       if (inputBuffer.length() > 0) {
-        String packet = buildPacket(inputBuffer, sequenceNumber++);
-        bool success = loraModule.sendMessage(packet);
+        // Проверка готовности модуля перед отправкой
+        if (digitalRead(Config::Pins::E32_AUX) == LOW) {
+          Serial.println("WARNING: Module not ready (AUX=LOW), skipping send");
+          inputBuffer = "";
+          continue;
+        }
         
-        Serial.print("TX> ");
+        String packet = buildPacket(inputBuffer, sequenceNumber++);
+        uint32_t txTime = micros();
+        bool success = loraModule.sendMessage(packet);
+        uint32_t txDuration = micros() - txTime;
+        
+        Serial.print("TX> [");
+        Serial.print(txTime);
+        Serial.print("µs] ");
         Serial.print(packet);
-        Serial.println(success ? " [OK]" : " [FAIL]");
+        
+        if (success) {
+          Serial.print(" [OK] (");
+          Serial.print(txDuration);
+          Serial.println("µs)");
+          
+          // Мигание LED при успешной отправке
+          digitalWrite(Config::Pins::LED, HIGH);
+          delay(50);
+          digitalWrite(Config::Pins::LED, LOW);
+        } else {
+          Serial.println(" [FAIL - Module error!]");
+        }
         
         // Обновление дисплея
         displayManager.showTxStatus(sequenceNumber - 1, inputBuffer, success);

@@ -39,11 +39,11 @@ namespace Config {
   }
 
   namespace Timing {
-    constexpr uint32_t MODULE_INIT_TIMEOUT   = 5000;  // Timeout for module ready (ms)
-    constexpr uint32_t MODULE_READY_POLL     = 100;   // Poll interval for AUX (ms)
-    constexpr uint32_t SERIAL_INIT_DELAY     = 500;   // Delay after Serial.begin() (ms)
-    constexpr uint32_t UART_INIT_DELAY       = 100;   // Delay after UART begin (ms)
-    constexpr uint32_t MODULE_STARTUP_DELAY  = 500;   // Delay after e32.begin() (ms)
+    constexpr uint32_t MODULE_INIT_TIMEOUT   = 10000; // Timeout for module ready (ms)
+    constexpr uint32_t MODULE_READY_POLL     = 50;    // Poll interval for AUX (ms)
+    constexpr uint32_t SERIAL_INIT_DELAY     = 1000;  // Delay after Serial.begin() (ms)
+    constexpr uint32_t UART_INIT_DELAY       = 500;   // Delay after UART begin (ms)
+    constexpr uint32_t MODULE_STARTUP_DELAY  = 2000;  // Delay after e32.begin() (ms)
     constexpr uint32_t PING_INTERVAL         = 1000;  // Interval between PING messages (ms)
   }
 
