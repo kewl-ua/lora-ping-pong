@@ -61,6 +61,7 @@ void loop() {
     
     if (c == '\n' || c == '\r') {
       if (rxBuffer.length() > 0) {
+        Serial.println("Parsing packet...");
         // Парсим пакет
         PacketData packet = parsePacket(rxBuffer);
         

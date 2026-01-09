@@ -54,6 +54,7 @@ void loop() {
     
     // Формируем пакет с EUID и временной меткой
     String packet = buildPacket("BEACON", sequenceNumber++);
+    packet += "\n";  // Add newline terminator for RX parsing
     uint32_t txTime = micros();
     bool success = loraModule.sendMessage(packet);
     uint32_t txDuration = micros() - txTime;
@@ -95,6 +96,7 @@ void loop() {
         }
         
         String packet = buildPacket(inputBuffer, sequenceNumber++);
+        packet += "\n";  // Add newline terminator for RX parsing
         uint32_t txTime = micros();
         bool success = loraModule.sendMessage(packet);
         uint32_t txDuration = micros() - txTime;
