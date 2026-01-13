@@ -68,30 +68,10 @@ bool LoRaModule::checkReady() {
     return false;
   }
   
-  // Читаем конфигурацию модуля
-  Serial.println("Reading module configuration...");
-  ResponseStructContainer config = e32.getConfiguration();
-  if (config.status.code == E32_SUCCESS) {
-    Configuration* cfg = (Configuration*)config.data;
-    Serial.println("=== Module Configuration ===");
-    Serial.print("ADDH: 0x"); Serial.println(cfg->ADDH, HEX);
-    Serial.print("ADDL: 0x"); Serial.println(cfg->ADDL, HEX);
-    Serial.print("Channel: "); Serial.println(cfg->CHAN);
-    Serial.print("Air Data Rate: "); Serial.println(cfg->SPED.getAirDataRate());
-    Serial.print("UART Baud: "); Serial.println(cfg->SPED.getUARTBaudRate());
-    Serial.print("UART Parity: "); Serial.println(cfg->SPED.getUARTParityDescription());
-    Serial.print("Transmission Mode: "); Serial.println(cfg->OPTION.getFixedTransmissionDescription());
-    Serial.print("Transmission Power: "); Serial.println(cfg->OPTION.getTransmissionPowerDescription());
-    Serial.print("FEC: "); Serial.println(cfg->OPTION.getFECDescription());
-    Serial.println("============================");
-    config.close();
-  } else {
-    Serial.print("Failed to read config: ");
-    Serial.println(config.status.getResponseDescription());
-  }
-  
+  // Пропускаем чтение конфигурации - модуль в NORMAL MODE (M0=M1=GND)
+  // и не может отвечать на команды конфигурации
   Serial.println("Module ready! Using factory/pre-configured settings.");
-  Serial.println("Note: M0=GND, M1=GND => NORMAL MODE");
+  Serial.println("Note: M0=GND, M1=GND => NORMAL MODE (cannot read config in this mode)");
   return true;
 }
 

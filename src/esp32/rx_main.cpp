@@ -52,19 +52,8 @@ void setup() {
   // Выводим ключевые параметры перед началом работы
   Serial.println();
   Serial.println(">>> KEY PARAMETERS <<<");
-  ResponseStructContainer config = loraModule.getE32()->getConfiguration();
-  if (config.status.code == E32_SUCCESS) {
-    Configuration* cfg = (Configuration*)config.data;
-    Serial.print("ADDH/ADDL: 0x");
-    Serial.print(cfg->ADDH, HEX);
-    Serial.print("/0x");
-    Serial.println(cfg->ADDL, HEX);
-    Serial.print("Channel: ");
-    Serial.println(cfg->CHAN);
-    Serial.print("Air Data Rate: ");
-    Serial.println(cfg->SPED.getAirDataRate());
-    config.close();
-  }
+  Serial.println("M0=M1=GND => NORMAL MODE (fixed)");
+  Serial.println("Using factory defaults: ADDH=0x00, ADDL=0x00, CH=0x17");
   Serial.println(">>>>>>>>>>>>>>>>>>>>>>>");
   Serial.println();
 }
