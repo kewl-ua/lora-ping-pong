@@ -41,12 +41,26 @@ void setup() {
 void loop() {
   // 1) Автоматическая отправка beacon пакетов
   static uint32_t lastSendMs = 0;
+  static uint32_t lastDebugMs = 0;
   
+  // Периодический debug
   const uint32_t now = millis();
+  if (now - lastDebugMs >= 5000) {
+    lastDebugMs = now;
+    Serial.print("TX alive, AUX=");
+    Serial.print(digitalRead(Config::Pins::E32_AUX) ? "HIGH" : "LOW");
+    Serial.print(", next send in ");
+    Serial.print((Config::Timing::PING_INTERVAL - (now - lastSendMs)) / 1000);
+    Serial.println("s");
+  }
+  
   if (now - lastSendMs >= Config::Timing::PING_INTERVAL) {
     lastSendMs = now;
     
     // Проверка готовности модуля перед отправкой
+    Serial.print("Sending... AUX=");
+    Serial.println(digitalRead(Config::Pins::E32_AUX) ? "HIGH" : "LOW");
+    
     if (digitalRead(Config::Pins::E32_AUX) == LOW) {
       Serial.println("WARNING: Module not ready (AUX=LOW), skipping send");
       return;
@@ -55,6 +69,11 @@ void loop() {
     // Формируем пакет с EUID и временной меткой
     String packet = buildPacket("BEACON", sequenceNumber++);
     packet += "\n";  // Add newline terminator for RX parsing
+    
+    Serial.print("Packet to send: [");
+    Serial.print(packet);
+    Serial.println("]");
+    
     uint32_t txTime = micros();
     bool success = loraModule.sendMessage(packet);
     uint32_t txDuration = micros() - txTime;
