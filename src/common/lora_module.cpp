@@ -4,14 +4,14 @@ LoRaModule loraModule;
 
 // Инициализация для разных платформ
 #ifdef PLATFORM_ESP32
-LoRaModule::LoRaModule() 
+LoRaModule::LoRaModule()
   : loraSerial(2),  // ESP32: UART2
-    e32(&loraSerial, Config::Pins::E32_AUX) {
+    e32(&loraSerial, Config::Pins::E32_AUX, Config::Pins::E32_M0, Config::Pins::E32_M1) {
 }
 #elif defined(PLATFORM_MEGA2560)
-LoRaModule::LoRaModule() 
+LoRaModule::LoRaModule()
   : loraSerial(Serial1),  // Mega: UART1
-    e32(&Serial1, Config::Pins::E32_AUX) {
+    e32(&Serial1, Config::Pins::E32_AUX, Config::Pins::E32_M0, Config::Pins::E32_M1) {
 }
 #endif
 
@@ -41,8 +41,8 @@ bool LoRaModule::initialize() {
   delay(Config::Timing::UART_INIT_DELAY);
   
   Serial.println("Starting E32 module...");
-  Serial.println("M0=GND, M1=GND => NORMAL MODE (fixed)");
-  
+  Serial.println("M0/M1 pins under software control");
+
   e32.begin();
   delay(Config::Timing::MODULE_STARTUP_DELAY);
   
@@ -90,8 +90,7 @@ bool LoRaModule::checkReady() {
     Serial.println(config.status.getResponseDescription());
   }
   
-  Serial.println("Module ready! Using factory/pre-configured settings.");
-  Serial.println("Note: M0=GND, M1=GND => NORMAL MODE");
+  Serial.println("Module ready!");
   return true;
 }
 

@@ -23,19 +23,21 @@ namespace Config {
       constexpr uint8_t UART_RX  = 16;  // UART2 RX (connected to E32 TX)
       constexpr uint8_t UART_TX  = 17;  // UART2 TX (connected to E32 RX)
       constexpr uint8_t E32_AUX  = 19;  // E32 AUX status pin
+      constexpr uint8_t E32_M0   = 4;   // E32 M0 mode control pin
+      constexpr uint8_t E32_M1   = 5;   // E32 M1 mode control pin
       constexpr uint8_t LED      = 21;  // External LED (220 Ohm resistor)
       constexpr uint8_t OLED_SDA = 23;  // SSD1306 I2C Data
       constexpr uint8_t OLED_SCL = 18;  // SSD1306 I2C Clock
-      
+
     #elif defined(PLATFORM_MEGA2560)
       // ===== Arduino Mega 2560 Pins =====
       constexpr uint8_t UART_RX  = 18;  // UART1 RX (connected to E32 TX)
       constexpr uint8_t UART_TX  = 19;  // UART1 TX (connected to E32 RX)
       constexpr uint8_t E32_AUX  = 20;  // E32 AUX status pin
+      constexpr uint8_t E32_M0   = 22;  // E32 M0 mode control pin
+      constexpr uint8_t E32_M1   = 23;  // E32 M1 mode control pin
       constexpr uint8_t LED      = 13;  // Built-in LED
     #endif
-    
-    // M0 и M1 зафиксированы на GND (NORMAL MODE) - не управляются программно
   }
 
   namespace Timing {
