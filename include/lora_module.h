@@ -30,6 +30,9 @@ public:
   // Получить указатель на Serial для расширенных операций
   HardwareSerial* getSerial() { return &loraSerial; }
   
+  // Получить указатель на E32 для расширенных операций
+  LoRa_E32* getE32() { return &e32; }
+  
 private:
   HardwareSerial loraSerial;
   LoRa_E32 e32;
