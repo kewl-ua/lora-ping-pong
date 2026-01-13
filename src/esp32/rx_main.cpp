@@ -53,11 +53,28 @@ void setup() {
 
 void loop() {
   static String rxBuffer;
+  static uint32_t lastDebugMs = 0;
+  
+  // Периодический debug вывод что живы
+  if (millis() - lastDebugMs >= 5000) {
+    lastDebugMs = millis();
+    Serial.print("RX alive, buffer: ");
+    Serial.print(rxBuffer.length());
+    Serial.print(" bytes, available: ");
+    Serial.println(loraModule.available());
+  }
   
   // Читаем UART побайтово для точного захвата времени
   while (loraModule.available() > 0) {
     uint32_t rxTime_us = micros();  // Захватываем время приема максимально точно
     char c = loraModule.read();
+    
+    Serial.print("RX byte: 0x");
+    Serial.print((byte)c, HEX);
+    Serial.print(" '");
+    if (c >= 32 && c < 127) Serial.print(c);
+    else Serial.print(".");
+    Serial.println("'");
     
     if (c == '\n' || c == '\r') {
       if (rxBuffer.length() > 0) {
